@@ -35,7 +35,8 @@ class PomodoroTimer:
 
         while self.is_running and self.time_left > 0:
             time.sleep(1)
-            self.time_left -= 1
+            if self.is_running:
+                self.time_left -= 1
             # print(f"Time left: {self.time_left} seconds")
 
         if self.time_left <= 0:
@@ -105,6 +106,16 @@ if __name__ == "__main__":
     print("Paused! Waiting 2 seconds to prove it stopped...")
     time.sleep(2)
     print(f"Time after waiting: {test_timer.get_formatted_time()}")
+
+    # --- RESUME COUNTDOWN ---
+    print("Resuming timer...")
+    # We create a brand new thread to run the start method again
+    resume_thread = threading.Thread(target=test_timer.start)
+    resume_thread.start()
+
+    for _ in range(5):
+        time.sleep(1)
+        print(f"Counting down... {test_timer.get_formatted_time()}")
 
     # 4. Test the reset button
     test_timer.reset()
