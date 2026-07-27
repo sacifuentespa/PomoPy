@@ -38,21 +38,8 @@ class PomodoroTimer:
             if self.is_running:
                 self.time_left -= 1
             # print(f"Time left: {self.time_left} seconds")
-
-        if self.time_left <= 0:
-            self.is_running = False
-            logging.info(f"The session {self.current_state} is complete!")
-            # Swap the state and reset the timer for the next phase
-            if self.current_state == "work":
-                self.current_state = "break"
-                self.time_left = self.break_duration
-            else:
-                self.current_state = "work"
-                self.time_left = self.work_duration
-
-            # 2. Trigger the callback so the main app can ring the alarm!
-            if self.on_complete:
-                self.on_complete()
+        
+        self.is_running = False
 
     def pause(self):
         """Pauses the timer."""
