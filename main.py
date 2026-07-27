@@ -14,7 +14,6 @@ class PomodoroController:
         self.ui = PomodoroUI(root)
 
         # Wire the buttons
-        # We use .config(command=...) to attach a function to a button click
         self.ui.start_btn.config(command=self.start_timer)
 
         self.ui.pause_btn.config(command=self.pause_timer)
@@ -26,16 +25,24 @@ class PomodoroController:
     def start_timer(self):
         """Triggered when the Start button is clicked."""
 
-        # Only spawn a thread if it's NOT already running!
+        try:
+            ui_work = int(self.ui.work_var.get()) * 60
+            ui_break = int(self.ui.break_var.get()) * 60
+        except ValueError:
+            ui_work, ui_break = 25 * 60, 5 * 60
+
+        # 2. SMART CHECK: Only update and reset if the user ACTUALLY changed the numbers
+        if ui_work != self.timer.work_duration or ui_break != self.timer.break_duration:
+            self.timer.pause()
+            self.timer.work_duration = ui_work
+            self.timer.break_duration = ui_break
+            self.timer.reset()
+            self.ui.update_display(self.timer.get_formatted_time())
+
+        # 3. Safely spawn the background thread
         if not self.timer.is_running:
-            
-            # Create the background thread targeting the engine
             timer_thread = threading.Thread(target=self.timer.start)
-            
-            # Make it a "daemon" thread
             timer_thread.daemon = True 
-            
-            # Wake up the assistant and let it work!
             timer_thread.start()
 
     def pause_timer(self):
@@ -68,21 +75,20 @@ class PomodoroController:
 
     def update_ui_loop(self):
         """Constantly polls the timer and updates the UI."""
-        
-        # Update the Time
+        # Update the clock numbers
         self.ui.update_display(self.timer.get_formatted_time())
         
-        # Update the Status Label
+        # Update the text label
         status_text = "Work Session" if self.timer.current_state == "work" else "Break Time!"
         if not self.timer.is_running:
             status_text += " (Paused)"
         self.ui.status_string.set(status_text)
         
-        # Handle Auto-Transitions when the clock hits zero
-        if self.timer.time_left == 0 and self.timer.is_running:
-            self.timer.pause() # Stop the current thread
+        # 3. AUTO-TRANSITION LOGIC
+        # If the clock hits 0, AND the thread has officially stopped:
+        if self.timer.time_left == 0 and not self.timer.is_running:
             
-            # Toggle the state
+            # Swap the states and apply the correct time
             if self.timer.current_state == "work":
                 self.timer.current_state = "break"
                 self.timer.time_left = self.timer.break_duration
@@ -90,10 +96,10 @@ class PomodoroController:
                 self.timer.current_state = "work"
                 self.timer.time_left = self.timer.work_duration
                 
-            # Automatically start the next phase!
+            # Spawn a fresh thread to start the next phase!
             self.start_timer()
 
-        # Schedule the next check
+        # Loop again in 100ms
         self.root.after(100, self.update_ui_loop)
 
 

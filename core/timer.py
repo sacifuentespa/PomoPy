@@ -27,18 +27,17 @@ class PomodoroTimer:
     def start(self):
         """Starts or resumes the countdown."""
         if self.is_running:
-            logging.warning("Timer is already running.")
             return
 
         self.is_running = True
-        logging.info("Timer started.")
 
+        # Keep looping as long as the flag is True AND we have time left
         while self.is_running and self.time_left > 0:
             time.sleep(1)
             if self.is_running:
                 self.time_left -= 1
-            # print(f"Time left: {self.time_left} seconds")
-        
+
+        # The moment it hits 0 (or is paused), turn the flag off cleanly.
         self.is_running = False
 
     def pause(self):
