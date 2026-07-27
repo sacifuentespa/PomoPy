@@ -1,6 +1,9 @@
 # main.py
+import os
 import tkinter as tk
 import threading
+import subprocess
+import platform
 from core.timer import PomodoroTimer
 from ui.main_window import PomodoroUI
 
@@ -21,6 +24,32 @@ class PomodoroController:
 
         #  Start the continuous UI update loop
         self.update_ui_loop()
+
+    def play_alarm(self):
+        """Plays a file using the OS's native audio player."""
+        os_name = platform.system()
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sound_file = os.path.join(current_dir,"assets", "universfield-digital-alarm-clock.wav")
+
+
+        try:
+            if os_name == "Windows":
+                # Windows has a built-in standard library for sound!
+                import winsound
+                # SND_ASYNC ensures the sound plays in the background without freezing the UI
+                winsound.PlaySound(sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+                
+            elif os_name == "Darwin": 
+                # Darwin is the core of macOS. It uses 'afplay'.
+                subprocess.Popen(["afplay", sound_file])
+                
+            elif os_name == "Linux":
+                # Linux uses 'aplay'.
+                subprocess.Popen(["aplay", "-q", sound_file])
+                
+        except Exception as e:
+            print(f"Failed to play alarm: {e}")
 
     def start_timer(self):
         """Triggered when the Start button is clicked."""
@@ -87,6 +116,8 @@ class PomodoroController:
         # AUTO-TRANSITION LOGIC
         # If the clock hits 0, AND the thread has officially stopped:
         if self.timer.time_left == 0 and not self.timer.is_running:
+            # ---> RING THE ALARM <---
+            self.play_alarm()
             
             # Swap the states and apply the correct time
             if self.timer.current_state == "work":
