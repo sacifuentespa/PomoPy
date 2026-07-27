@@ -31,7 +31,7 @@ class PomodoroController:
         except ValueError:
             ui_work, ui_break = 25 * 60, 5 * 60
 
-        # 2. SMART CHECK: Only update and reset if the user ACTUALLY changed the numbers
+        # SMART CHECK: Only update and reset if the user ACTUALLY changed the numbers
         if ui_work != self.timer.work_duration or ui_break != self.timer.break_duration:
             self.timer.pause()
             self.timer.work_duration = ui_work
@@ -39,7 +39,7 @@ class PomodoroController:
             self.timer.reset()
             self.ui.update_display(self.timer.get_formatted_time())
 
-        # 3. Safely spawn the background thread
+        # Safely spawn the background thread
         if not self.timer.is_running:
             timer_thread = threading.Thread(target=self.timer.start)
             timer_thread.daemon = True 
@@ -84,7 +84,7 @@ class PomodoroController:
             status_text += " (Paused)"
         self.ui.status_string.set(status_text)
         
-        # 3. AUTO-TRANSITION LOGIC
+        # AUTO-TRANSITION LOGIC
         # If the clock hits 0, AND the thread has officially stopped:
         if self.timer.time_left == 0 and not self.timer.is_running:
             
